@@ -1,0 +1,125 @@
+Build a mobile-first AI calorie tracker app called NutriSnap.
+Tech stack: React + Vite + Tailwind CSS, all data in localStorage.
+PAGES with bottom tab navigation:
+
+Home/Camera - upload food photo, analyze with AI, show results, "Add to Diary" button
+Diary - today's meals list with running calorie total at top, delete meal option
+Macros - 3 circular progress rings (Protein blue/Carbs orange/Fat green), daily goals: protein 150g, carbs 200g, fat 65g
+History - weekly bar chart of daily calories for last 7 days
+Streak - current streak + best streak counter AI ANALYSIS:
+When user uploads a food photo, send it as base64 to a mock analyze function
+Return realistic fake data for now: { foodName, calories, protein, carbs, fat, fiber, servingSize }
+We will connect real Gemini API later DESIGN:
+Dark theme (#0f0f0f background)
+Accent color: green (#22c55e)
+Rounded cards, modern fitness app feel
+Loading spinner while analyzing (2 second fake delay)
+Show food name + calories big, macros in colored pills
+Mobile width max 430px centered on desktop
+Let me start by reading the existing project files to understand the current setup.
+
+Plan
+Set up project dependencies and Tailwind config
+Create app structure: routing, layout, bottom tab nav
+Build Home/Camera page with photo upload and AI analysis
+Build Diary page with meal list and calorie total
+Build Macros page with circular progress rings
+Build History page with weekly bar chart
+Build Streak page with streak counters
+Create localStorage utility and mock AI analysis
+Style everything with dark theme and polish
+Build and verify the project compiles
+Plan completed
+Open details
+NutriSnap is built and compiles cleanly. Here's what was created:
+
+5 pages with bottom tab navigation:
+
+Snap - Upload a food photo, AI analyzes it (2s mock delay), shows food name + calories prominently, macro pills in blue/orange/green, "Add to Diary" button
+Diary - Today's meals with running calorie total at top, per-meal macro breakdown, swipe-to-delete
+Macros - 3 circular SVG progress rings (Protein blue/Carbs orange/Fat green) with daily goals of 150g/200g/65g, plus horizontal progress bars below
+History - Weekly bar chart of daily calories for last 7 days, average calorie card, day-by-day detail list
+Streak - Current streak + best streak counters, total meals logged, days tracked stats
+Design: Dark theme (#0f0f0f), green accent (#22c55e), rounded cards, 430px max-width centered on desktop, Inter font, smooth animations (fade-in, pulse ring on loading), backdrop-blur nav bar.
+
+Data: All persisted in localStorage. Mock AI returns 12 realistic food items. Streak logic tracks consecutive logging days.
+
+
+
+
+
+Build NutriSnap app
+Version 1 at Jun 01 1:00 PM
+
+
+
+Add real Gemini API integration for food photo analysis.
+In the analyze function, instead of returning mock data:
+
+Take the base64 image from the uploaded photo
+Call Google Gemini API (gemini-1.5-flash) with this fetch call: const response = await fetch( 
+https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}
+
+, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [ { inline_data: { mime_type: mimeType, data: base64Data } }, { text: 'Analyze this food image. Return ONLY a JSON object with no markdown, no backticks, just raw JSON: {"foodName": "", "calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "servingSize": ""}' } ] }] }) } ); const data = await response.json(); const text = data.candidates[0].content.parts[0].text; const clean = text.replace(/json|/g, '').trim(); return JSON.parse(clean);
+Add VITE_GEMINI_API_KEY to the .env file
+Keep the mock data as fallback if the API call fails
+
+0123456789
+ files read
+I need to update the analyzeFood function to accept the MIME type, update the caller in HomePage to pass it, and add the env var.
+
+Now update HomePage to pass the MIME type to analyzeFood.
+
+
+Wrote
+src/lib/ai.ts
+Open
+Now add the env var to .env.
+
+
+0123456789
+ actions taken
+Done. Here's what changed:
+
+src/lib/ai.ts - analyzeFood now takes (imageBase64, mimeType) and calls the Gemini 1.5 Flash API with the image as inline data. If VITE_GEMINI_API_KEY is missing or the API call fails, it falls back to the mock data with a 2-second delay.
+src/pages/HomePage.tsx - Extracts the file's MIME type from the selected file and passes it to analyzeFood.
+.env - Added VITE_GEMINI_API_KEY= (empty, needs your key).
+To activate real AI analysis, set VITE_GEMINI_API_KEY in the .env file to your Google AI API key.
+
+
+
+
+
+Enable Gemini API for food analysis
+Version 2 at Jun 01 1:09 PM
+
+
+
+The Gemini API is returning a 404 error. Fix the API endpoint
+URL in src/lib/ai.ts to use the correct one:
+Change the fetch URL to:
+https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}
+Make sure the model name is exactly "gemini-1.5-flash-latest"
+not "gemini-1.5-flash"
+
+
+0123456789
+ actions taken
+Updated the model name from gemini-1.5-flash to gemini-1.5-flash-latest in the API endpoint URL.
+
+
+
+
+
+Update API model name
+Version 3 at Jun 01 1:25 PM
+
+
+
+Publish this application.
+
+Your site has been successfully published! You can view it at: 
+https://nutrisnap-ai-calorie-lj2n.bolt.host
+
+
+To add a custom domain or purchase one through Bolt, upgrade to Bolt Pro
